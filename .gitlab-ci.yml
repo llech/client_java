@@ -1,0 +1,14 @@
+java-build:
+  stage: build
+  script:
+    - mvn install
+  image: maven:3.5-jdk-8
+
+java-deploy:
+  stage: deploy
+  only:
+    - master
+  script:
+    - mvn deploy -Dmaven.test.skip=true
+    - mvn deploy -P!attach-sources,update-dev -Dmaven.test.skip=true
+  image: maven:3.5-jdk-8
