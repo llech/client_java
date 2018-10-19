@@ -66,6 +66,7 @@ public class MetricsFilter implements Filter {
     private String help = "The time taken fulfilling servlet requests";
     private double[] buckets = null;
     private CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
+    private int maxComponentLength = 8; // max url component length, if longer, add URL before that component
 
     public MetricsFilter() {}
 
@@ -82,6 +83,11 @@ public class MetricsFilter implements Filter {
         if (pathComponents != null) {
             this.pathComponents = pathComponents;
         }
+    }
+
+    public void setMaxComponentLength(int maxComponentLength)
+    {
+      this.maxComponentLength = maxComponentLength;
     }
 
     public void setCollectorRegistry(CollectorRegistry collectorRegistry) {
@@ -102,11 +108,20 @@ public class MetricsFilter implements Filter {
         int count = 0;
         int i =  -1;
         do {
-            i = str.indexOf("/", i + 1);
-            if (i < 0) {
+            int j = str.indexOf("/", i + 1);
+            if (j < 0) {
+                if ( maxComponentLength >= 0 && i > 0  && (str.length()-i) > maxComponentLength ) {
+                  // return path until i
+                  break;
+                }
                 // Path is longer than specified pathComponents.
                 return str;
             }
+            if ( maxComponentLength >= 0 && (j-i) > maxComponentLength ) {
+              // return path until i
+              break;
+            }
+            i = j;
             count++;
         } while (count <= pathComponents);
 
