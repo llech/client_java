@@ -8,6 +8,7 @@ java-deploy:
   stage: deploy
   only:
     - master
+    - /^.*-RELEASE$/
   script:
     - mvn deploy -Dmaven.test.skip=true
     - mvn deploy -P!attach-sources,update-dev -Dmaven.test.skip=true
