@@ -1,7 +1,6 @@
 package io.prometheus.client.filter;
 
-import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.Histogram;
+import java.io.IOException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -10,7 +9,10 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
+
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.Gauge;
+import io.prometheus.client.Histogram;
 
 /**
  * The MetricsFilter class exists to provide a high-level filter that enables tunable collection of metrics for Servlet
@@ -59,6 +61,7 @@ public class MetricsFilter implements Filter {
     static final String BUCKET_CONFIG_PARAM = "buckets";
 
     private Histogram histogram = null;
+    private Gauge activeJaxrsRequests = null;
 
     // Package-level for testing purposes.
     int pathComponents = 1;
@@ -173,6 +176,9 @@ public class MetricsFilter implements Filter {
                 .help(help)
                 .name(metricName)
                 .register(collectorRegistry);
+        
+        activeJaxrsRequests = Gauge.build()
+            .name("jaxrs_active_requests").help("Active JaxRS requests").register(collectorRegistry);
     }
 
     @Override
@@ -190,9 +196,11 @@ public class MetricsFilter implements Filter {
             .labels(getComponents(path), request.getMethod())
             .startTimer();
 
+        activeJaxrsRequests.inc();
         try {
             filterChain.doFilter(servletRequest, servletResponse);
         } finally {
+            activeJaxrsRequests.dec();
             timer.observeDuration();
         }
     }
