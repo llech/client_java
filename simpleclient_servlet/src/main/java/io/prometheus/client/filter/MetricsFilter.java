@@ -113,7 +113,7 @@ public class MetricsFilter implements Filter {
         do {
             int j = str.indexOf("/", i + 1);
             if (j < 0) {
-                if ( maxComponentLength >= 0 && i > 0  && (str.length()-i) > maxComponentLength ) {
+                if ( maxComponentLength >= 0 && i > 0  && (str.length()-i-1) > maxComponentLength ) {
                   // return path until i
                   break;
                 }
