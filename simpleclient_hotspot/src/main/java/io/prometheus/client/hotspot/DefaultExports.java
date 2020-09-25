@@ -36,7 +36,6 @@ public class DefaultExports {
   public static void register(CollectorRegistry registry) {
     new StandardExports().register(registry);
     new MemoryPoolsExports().register(registry);
-    new MemoryAllocationExports().register(registry);
     new BufferPoolsExports().register(registry);
     new GarbageCollectorExports().register(registry);
     new ThreadExports().register(registry);
