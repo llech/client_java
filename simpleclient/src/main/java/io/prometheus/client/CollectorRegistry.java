@@ -32,13 +32,28 @@ public class CollectorRegistry {
   private final Map<String, Collector> namesToCollectors = new HashMap<String, Collector>();
 
   private final boolean autoDescribe;
+  
+  /**
+   * If set to true, if collector is already registered, and is of the same type, it will be returned (unless overwrite flag is given).
+   */
+  private final boolean autoReuse;
 
   public CollectorRegistry() {
     this(false);
   }
 
   public CollectorRegistry(boolean autoDescribe) {
+    this(autoDescribe, false);
+  }
+
+  public CollectorRegistry(boolean autoDescribe, boolean autoReuse)
+  {
     this.autoDescribe = autoDescribe;
+    this.autoReuse = autoReuse;
+  }
+  
+  public <C extends Collector> C register(C m) {
+    return register(m, false);
   }
 
   /**
@@ -46,12 +61,27 @@ public class CollectorRegistry {
    * <p>
    * A collector can be registered to multiple CollectorRegistries.
    */
-  public void register(Collector m) {
+  @SuppressWarnings("unchecked")
+  public <C extends Collector> C register(C m, boolean reuse) {
     List<String> names = collectorNames(m);
-    synchronized (namesCollectorsLock) {
+    synchronized (collectorsToNames) {
+      // first check if there's no conflict on collector name
       for (String name : names) {
-        if (namesToCollectors.containsKey(name)) {
-          throw new IllegalArgumentException("Collector already registered that provides name: " + name);
+        Collector existing = namesToCollectors.get(name);
+        if (existing != null) {
+          if (!reuse && !autoReuse) {
+            throw new IllegalArgumentException("Collector already registered that provides name: " + name);
+          } else if (!existing.getClass().equals(m.getClass())) {
+            throw new IllegalArgumentException("Unable to reuse collector that provides name: " + name + ". Incompatible types.");
+          } else {
+            // compare collector names for found collector, overwrite/replace possible only if both sets are identical
+            List<String> existingNames = collectorNames(existing);
+            if (!existingNames.containsAll(names) || !names.containsAll(existingNames)) {
+              throw new IllegalArgumentException("Unable to reuse collector that provides name: " + name + ". Existing collector using that name uses incompatible name set.");
+            }
+          }
+          // if we are here, it means, we have existing collector that should be returned instead of that that we try to register
+          return (C) existing;
         }
       }
       for (String name : names) {
@@ -59,6 +89,7 @@ public class CollectorRegistry {
       }
       collectorsToNames.put(m, names);
     }
+    return m;
   }
 
   /**

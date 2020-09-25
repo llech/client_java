@@ -5,7 +5,7 @@
 
     <groupId>io.prometheus</groupId>
     <artifactId>parent</artifactId>
-    <version>0.9.0</version>
+    <version>0.9.1-SNAPSHOT</version>
 
     <parent>
         <groupId>org.sonatype.oss</groupId>
@@ -69,16 +69,17 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
+  <distributionManagement>
+    <repository>
+      <id>releases</id>
+      <url>https://rep.ringler.ch/nexus/repository/releases/</url>
+    </repository>
+    <snapshotRepository>
+      <id>snapshots</id>
+      <url>https://rep.ringler.ch/nexus/repository/snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
 
     <build>
         <plugins>
@@ -108,6 +109,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.15</version>
+                <configuration>
+                    <forkCount>0</forkCount>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -190,5 +194,46 @@
                 </plugins>
             </build>
         </profile>
+      <profile>
+          <id>update-dev</id>
+          <activation>
+            <activeByDefault>false</activeByDefault>
+          </activation>
+          <!--
+          Those repositories are accessible read-only without authorization only internally. 
+          The artifacts deployed there will be accessible for processes using maven protocol
+          to fetch updates, for example karaf containers running in docker.  
+           -->
+          <distributionManagement>
+            <repository>
+              <id>update-dev-releases</id>
+              <url>https://update-dev.ringler.ch/nexus/repository/maven-releases/</url>
+            </repository>
+            <snapshotRepository>
+              <id>update-dev-snapshots</id>
+              <url>https://update-dev.ringler.ch/nexus/repository/maven-snapshots/</url>
+            </snapshotRepository>
+          </distributionManagement>
+      </profile>
+      <profile>
+          <id>update-prod</id>
+          <activation>
+            <activeByDefault>false</activeByDefault>
+          </activation>
+          <!--
+          Those repositories are accessible read-only without authorization for everyone.
+          No sources should be released there, internal code should be obfuscated when possible. 
+           -->
+          <distributionManagement>
+            <repository>
+              <id>update-prod-releases</id>
+              <url>https://update.drtax.ch/nexus/repository/maven-releases/</url>
+            </repository>
+            <snapshotRepository>
+              <id>update-prod-snapshots</id>
+              <url>https://update.drtax.ch/nexus/repository/maven-snapshots/</url>
+            </snapshotRepository>
+          </distributionManagement>
+      </profile>
     </profiles>
 </project>

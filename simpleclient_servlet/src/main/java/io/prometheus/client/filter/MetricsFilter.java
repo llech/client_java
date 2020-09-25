@@ -1,6 +1,6 @@
 package io.prometheus.client.filter;
 
-import io.prometheus.client.Histogram;
+import java.io.IOException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -9,7 +9,10 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
+
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.Gauge;
+import io.prometheus.client.Histogram;
 
 /**
  * The MetricsFilter class exists to provide a high-level filter that enables tunable collection of metrics for Servlet
@@ -58,12 +61,15 @@ public class MetricsFilter implements Filter {
     static final String BUCKET_CONFIG_PARAM = "buckets";
 
     private Histogram histogram = null;
+    private Gauge activeJaxrsRequests = null;
 
     // Package-level for testing purposes.
     int pathComponents = 1;
     private String metricName = null;
     private String help = "The time taken fulfilling servlet requests";
     private double[] buckets = null;
+    private CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
+    private int maxComponentLength = 8; // max url component length, if longer, add URL before that component
 
     public MetricsFilter() {}
 
@@ -82,6 +88,18 @@ public class MetricsFilter implements Filter {
         }
     }
 
+    public void setMaxComponentLength(int maxComponentLength)
+    {
+      this.maxComponentLength = maxComponentLength;
+    }
+
+    public void setCollectorRegistry(CollectorRegistry collectorRegistry) {
+      if (collectorRegistry == null) {
+        throw new IllegalArgumentException("CollectorRegistry must not be null!");
+      }
+      this.collectorRegistry = collectorRegistry;
+    }
+
     private boolean isEmpty(String s) {
         return s == null || s.length() == 0;
     }
@@ -93,11 +111,20 @@ public class MetricsFilter implements Filter {
         int count = 0;
         int i =  -1;
         do {
-            i = str.indexOf("/", i + 1);
-            if (i < 0) {
+            int j = str.indexOf("/", i + 1);
+            if (j < 0) {
+                if ( maxComponentLength >= 0 && i > 0  && (str.length()-i-1) > maxComponentLength ) {
+                  // return path until i
+                  break;
+                }
                 // Path is longer than specified pathComponents.
                 return str;
             }
+            if ( maxComponentLength >= 0 && (j-i) > maxComponentLength ) {
+              // return path until i
+              break;
+            }
+            i = j;
             count++;
         } while (count <= pathComponents);
 
@@ -148,7 +175,10 @@ public class MetricsFilter implements Filter {
         histogram = builder
                 .help(help)
                 .name(metricName)
-                .register();
+                .register(collectorRegistry);
+        
+        activeJaxrsRequests = Gauge.build()
+            .name("jaxrs_active_requests").help("Active JaxRS requests").register(collectorRegistry);
     }
 
     @Override
@@ -166,14 +196,17 @@ public class MetricsFilter implements Filter {
             .labels(getComponents(path), request.getMethod())
             .startTimer();
 
+        activeJaxrsRequests.inc();
         try {
             filterChain.doFilter(servletRequest, servletResponse);
         } finally {
+            activeJaxrsRequests.dec();
             timer.observeDuration();
         }
     }
 
     @Override
     public void destroy() {
+      collectorRegistry.unregister(histogram);
     }
 }

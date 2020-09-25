@@ -237,14 +237,21 @@ public abstract class SimpleCollector<Child> extends Collector {
     public C register() {
       return register(CollectorRegistry.defaultRegistry);
     }
+    
+    public C register(boolean overwrite) {
+      return register(CollectorRegistry.defaultRegistry, overwrite);
+    }
+    
+    public C register(CollectorRegistry registry) {
+      return register(registry, false);
+    }
 
     /**
      * Create and register the Collector with the given registry.
      */
-    public C register(CollectorRegistry registry) {
+    public C register(CollectorRegistry registry, boolean overwrite) {
       C sc = create();
-      registry.register(sc);
-      return sc;
+      return registry.register(sc, overwrite);
     }
   }
 }
