@@ -15,12 +15,12 @@
     </build>
 
     <parent>
-        <groupId>io.prometheus</groupId>
+        <groupId>com.riag.prometheus</groupId>
         <artifactId>parent</artifactId>
         <version>0.9.1-SNAPSHOT</version>
     </parent>
 
-    <groupId>io.prometheus</groupId>
+    <groupId>com.riag.prometheus</groupId>
     <artifactId>simpleclient_vertx</artifactId>
     <packaging>bundle</packaging>
 
@@ -51,12 +51,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.prometheus</groupId>
+            <groupId>com.riag.prometheus</groupId>
             <artifactId>simpleclient</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.prometheus</groupId>
+            <groupId>com.riag.prometheus</groupId>
             <artifactId>simpleclient_common</artifactId>
             <version>${project.version}</version>
         </dependency>

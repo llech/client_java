@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.prometheus</groupId>
+        <groupId>com.riag.prometheus</groupId>
         <artifactId>parent</artifactId>
         <version>0.9.1-SNAPSHOT</version>
     </parent>
 
-    <groupId>io.prometheus</groupId>
+    <groupId>com.riag.prometheus</groupId>
     <artifactId>simpleclient_dropwizard</artifactId>
     <packaging>bundle</packaging>
 
@@ -33,7 +33,7 @@
     </developers>
     <dependencies>
         <dependency>
-            <groupId>io.prometheus</groupId>
+            <groupId>com.riag.prometheus</groupId>
             <artifactId>simpleclient</artifactId>
             <version>${project.version}</version>
         </dependency>

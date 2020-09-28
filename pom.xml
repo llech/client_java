@@ -3,7 +3,7 @@
     <packaging>pom</packaging>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.prometheus</groupId>
+    <groupId>com.riag.prometheus</groupId>
     <artifactId>parent</artifactId>
     <version>0.9.1-SNAPSHOT</version>
 
